@@ -8,8 +8,7 @@ echo ""
 echo "==> Installing Sigma backends..."
 pip install -q sigma-cli \
   pySigma-backend-elasticsearch \
-  pySigma-backend-elastalert2 \
-  pySigma-backend-microsoft365defender \
+  pySigma-backend-kusto \
   pyyaml
 
 mkdir -p ${OUT_DIR}/elk
@@ -47,13 +46,13 @@ for rule in $(find ${SIGMA_DIR} -name "*.yml"); do
     "$rule" "${OUT_DIR}/wazuh/${SUBDIR}/${BASENAME}.xml" \
     && echo "    [PASS] Wazuh" || echo "    [WARN] Wazuh skipped"
 
-  # ElastAlert2
-  sigma convert -t elastalert2 -p sysmon \
-    "$rule" -o "${OUT_DIR}/elastalert2/${SUBDIR}/${BASENAME}.yml" 2>/dev/null \
+  # ElastAlert2 (custom converter - no official pySigma backend exists)
+  python3 scripts/sigma_to_elastalert2.py \
+    "$rule" "${OUT_DIR}/elastalert2/${SUBDIR}/${BASENAME}.yml" \
     && echo "    [PASS] ElastAlert2" || echo "    [WARN] ElastAlert2 skipped"
 
-  # Microsoft Sentinel KQL
-  sigma convert -t microsoft365defender -f kusto \
+  # Microsoft Sentinel KQL (via kusto backend)
+  sigma convert -t kusto -p sysmon \
     "$rule" -o "${OUT_DIR}/sentinel/${SUBDIR}/${BASENAME}.kql" 2>/dev/null \
     && echo "    [PASS] Sentinel KQL" || echo "    [WARN] Sentinel KQL skipped"
 
