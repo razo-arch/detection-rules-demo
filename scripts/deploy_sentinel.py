@@ -2,7 +2,6 @@
 """Deploys converted KQL rules to Microsoft Sentinel as Analytic Rules."""
 
 import os
-import json
 import requests
 from pathlib import Path
 
@@ -16,6 +15,7 @@ WORKSPACE_NAME  = os.environ["SENTINEL_WORKSPACE_NAME"]
 RULES_DIR = Path("converted/sentinel")
 
 def get_token():
+    print(f"[INFO] Requesting Azure token for tenant {TENANT_ID[:8]}...")
     r = requests.post(
         f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token",
         data={
@@ -25,11 +25,18 @@ def get_token():
             "scope":         "https://management.azure.com/.default"
         }
     )
+    if r.status_code != 200:
+        print(f"[ERROR] Token request failed {r.status_code}: {r.text}")
+        raise Exception("Authentication failed")
+    print(f"[OK] Token acquired successfully")
     return r.json()["access_token"]
 
 def deploy_rule(kql_file, token):
     rule_name = kql_file.stem.replace("_", "-")
     kql_query = kql_file.read_text()
+
+    print(f"[INFO] Deploying rule: {rule_name}")
+    print(f"[INFO] KQL query length: {len(kql_query)} chars")
 
     url = (
         f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}"
@@ -38,6 +45,8 @@ def deploy_rule(kql_file, token):
         f"/providers/Microsoft.SecurityInsights/alertRules/{rule_name}"
         f"?api-version=2023-02-01"
     )
+
+    print(f"[INFO] URL: {url}")
 
     payload = {
         "kind": "Scheduled",
@@ -71,6 +80,15 @@ def deploy_rule(kql_file, token):
     else:
         print(f"  [FAILED]   {rule_name} → {r.status_code}: {r.text}")
 
-token = get_token()
-for kql_file in RULES_DIR.rglob("*.kql"):
-    deploy_rule(kql_file, token)
+print(f"[INFO] Scanning {RULES_DIR} for .kql files...")
+kql_files = list(RULES_DIR.rglob("*.kql"))
+print(f"[INFO] Found {len(kql_files)} rule(s)")
+
+if not kql_files:
+    print("[WARN] No .kql files found - nothing to deploy")
+else:
+    token = get_token()
+    for kql_file in kql_files:
+        deploy_rule(kql_file, token)
+
+print("[INFO] Sentinel deployment complete")
