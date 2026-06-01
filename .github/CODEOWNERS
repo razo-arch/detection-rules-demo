@@ -1,0 +1,5 @@
+﻿*                              @razo-arch
+elk/detection-rules/           @razo-arch
+wazuh/rules/                   @razo-arch
+.github/workflows/             @razo-arch
+scripts/                       @razo-arch

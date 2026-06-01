@@ -1,0 +1,33 @@
+﻿name: Validate Detection Rules
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "elk/**"
+      - "wazuh/**"
+      - "scripts/**"
+
+jobs:
+  validate-elk:
+    name: Validate ELK Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run ELK validation
+        run: python scripts/validate_elk_rules.py
+
+  validate-wazuh:
+    name: Validate Wazuh Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+      - name: Run Wazuh validation
+        run: |
+          chmod +x scripts/validate_wazuh_rules.sh
+          bash scripts/validate_wazuh_rules.sh

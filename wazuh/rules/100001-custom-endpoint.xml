@@ -1,0 +1,23 @@
+﻿<group name="custom,endpoint,execution">
+
+  <rule id="100001" level="10">
+    <if_group>syscheck</if_group>
+    <field name="file">/tmp/.*\.sh</field>
+    <description>Suspicious shell script created in /tmp directory</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>execution,suspicious_file</group>
+  </rule>
+
+  <rule id="100002" level="12" frequency="5" timeframe="60">
+    <if_matched_sid>5760</if_matched_sid>
+    <same_source_ip/>
+    <description>SSH Brute Force Attempt from $(srcip)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>authentication_failures,brute_force</group>
+  </rule>
+
+</group>

@@ -1,0 +1,27 @@
+﻿name: Deploy Detection Rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "elk/**"
+      - "wazuh/**"
+
+jobs:
+  deploy-wazuh:
+    name: Deploy to Wazuh
+    runs-on: ubuntu-latest
+    environment:
+      name: production-wazuh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+      - name: Deploy rules to Wazuh
+        env:
+          WAZUH_HOST:    ${{ secrets.WAZUH_HOST }}
+          WAZUH_USER:    ${{ secrets.WAZUH_SSH_USER }}
+          WAZUH_SSH_KEY: ${{ secrets.WAZUH_SSH_KEY_B64 }}
+        run: |
+          chmod +x scripts/deploy_wazuh_rules.sh
+          bash scripts/deploy_wazuh_rules.sh
