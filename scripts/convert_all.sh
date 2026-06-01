@@ -16,10 +16,6 @@ echo "==> Installing Sigma plugins..."
 sigma plugin install elasticsearch 2>/dev/null || true
 sigma plugin install kusto 2>/dev/null || true
 
-echo ""
-echo "==> Available backends:"
-sigma list targets || true
-
 mkdir -p ${OUT_DIR}/elk
 mkdir -p ${OUT_DIR}/wazuh
 mkdir -p ${OUT_DIR}/elastalert2
@@ -60,10 +56,9 @@ for rule in $(find ${SIGMA_DIR} -name "*.yml"); do
     "$rule" "${OUT_DIR}/elastalert2/${SUBDIR}/${BASENAME}.yml" \
     && echo "    [PASS] ElastAlert2" || echo "    [WARN] ElastAlert2 skipped"
 
-  # Microsoft Sentinel KQL (via kusto backend) - show errors
-  echo "    Attempting Sentinel KQL conversion..."
-  sigma convert -t kusto -p sysmon \
-    "$rule" -o "${OUT_DIR}/sentinel/${SUBDIR}/${BASENAME}.kql" \
+  # Microsoft Sentinel KQL (via kusto backend - no pipeline needed)
+  sigma convert -t kusto \
+    "$rule" -o "${OUT_DIR}/sentinel/${SUBDIR}/${BASENAME}.kql" 2>/dev/null \
     && echo "    [PASS] Sentinel KQL" || echo "    [WARN] Sentinel KQL skipped"
 
   RULE_COUNT=$((RULE_COUNT + 1))
