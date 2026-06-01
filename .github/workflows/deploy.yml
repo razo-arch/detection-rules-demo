@@ -30,5 +30,5 @@ jobs:
           SSH_OPTS="-o StrictHostKeyChecking=no -i /tmp/wazuh_key"
           for f in wazuh/rules/*.xml; do xmllint --noout "$f"; done
           scp $SSH_OPTS wazuh/rules/*.xml $WAZUH_USER@$WAZUH_HOST:/tmp/
-          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST "sudo cp /tmp/*.xml /var/ossec/etc/rules/ && sudo chown wazuh:wazuh /var/ossec/etc/rules/*.xml && sudo /var/ossec/bin/wazuh-control reload"
+          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST "sudo cp /tmp/100001-custom-endpoint.xml /var/ossec/etc/rules/ && sudo /var/ossec/bin/wazuh-control reload && echo Done"
           echo "Deployment complete."
