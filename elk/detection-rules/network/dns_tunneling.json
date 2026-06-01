@@ -1,0 +1,35 @@
+﻿{
+  "rule_id": "custom-002",
+  "name": "Potential DNS Tunneling - High Query Volume",
+  "description": "Detects unusually high DNS query volume from a single host, indicative of DNS tunneling for C2 communication.",
+  "severity": "medium",
+  "risk_score": 47,
+  "type": "threshold",
+  "language": "kuery",
+  "query": "event.category: network and network.protocol: dns",
+  "threshold": {
+    "field": ["source.ip"],
+    "value": 100
+  },
+  "index": ["packetbeat-*", "logs-network.*"],
+  "tags": ["command-and-control", "T1071.004", "DNS"],
+  "threat": [{
+    "framework": "MITRE ATT&CK",
+    "tactic": {
+      "id": "TA0011",
+      "name": "Command and Control",
+      "reference": "https://attack.mitre.org/tactics/TA0011/"
+    },
+    "technique": [{
+      "id": "T1071",
+      "name": "Application Layer Protocol",
+      "reference": "https://attack.mitre.org/techniques/T1071/"
+    }]
+  }],
+  "enabled": true,
+  "meta": {
+    "author": "soc-analyst-01",
+    "created_date": "2026-06-01",
+    "review_ticket": "SEC-002"
+  }
+}
