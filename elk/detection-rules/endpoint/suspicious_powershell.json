@@ -1,31 +1,44 @@
 {
-  "rule_id": "custom-001",
-  "name": "Suspicious PowerShell Encoded Command",
-  "description": "Detects PowerShell execution with encoded commands, commonly used to bypass detection.",
-  "severity": "high",
-  "risk_score": 73,
-  "type": "query",
-  "language": "kuery",
-  "query": "process.name: powershell.exe and process.args: *encodedcommand*",
-  "index": ["winlogbeat-*", "logs-endpoint.events.*"],
-  "tags": ["execution", "T1059.001", "Windows", "PowerShell"],
-  "threat": [{
-    "framework": "MITRE ATT&CK",
-    "tactic": {
-      "id": "TA0002",
-      "name": "Execution",
-      "reference": "https://attack.mitre.org/tactics/TA0002/"
-    },
-    "technique": [{
-      "id": "T1059",
-      "name": "Command and Scripting Interpreter",
-      "reference": "https://attack.mitre.org/techniques/T1059/"
-    }]
-  }],
-  "enabled": true,
-  "meta": {
-    "author": "soc-analyst-01",
-    "created_date": "2026-06-01",
-    "review_ticket": "SEC-001"
-  }
+    "rule_id":  "custom-001",
+    "name":  "Suspicious PowerShell Encoded Command",
+    "description":  "Detects PowerShell execution with encoded commands, commonly used to bypass detection.",
+    "severity":  "high",
+    "risk_score":  73,
+    "type":  "query",
+    "language":  "kuery",
+    "query":  "process.name: powershell.exe and process.args: *encodedcommand*",
+    "index":  [
+                  "winlogbeat-*",
+                  "logs-endpoint.events.*"
+              ],
+    "tags":  [
+                 "execution",
+                 "T1059.001",
+                 "Windows",
+                 "PowerShell"
+             ],
+    "threat":  [
+                   {
+                       "framework":  "MITRE ATT\u0026CK",
+                       "tactic":  {
+                                      "id":  "TA0002",
+                                      "name":  "Execution",
+                                      "reference":  "https://attack.mitre.org/tactics/TA0002/"
+                                  },
+                       "technique":  [
+                                         {
+                                             "id":  "T1059",
+                                             "name":  "Command and Scripting Interpreter",
+                                             "reference":  "https://attack.mitre.org/techniques/T1059/"
+                                         }
+                                     ]
+                   }
+               ],
+    "enabled":  true,
+    "meta":  {
+                 "author":  "soc-analyst-01",
+                 "created_date":  "2026-06-01",
+                 "review_ticket":  "SEC-001",
+                 "version":  "2"
+             }
 }
