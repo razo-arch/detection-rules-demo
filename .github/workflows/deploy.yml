@@ -5,8 +5,11 @@ on:
     branches: [main]
     paths:
       - "sigma/**"
+      - "scripts/**"
+  workflow_dispatch:
 
 jobs:
+
   convert:
     name: Convert Sigma Rules
     runs-on: ubuntu-latest
