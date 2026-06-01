@@ -1,0 +1,27 @@
+title: Suspicious PowerShell Encoded Command
+id: 7e7e5f64-3f52-4e3d-9f7b-1234567890ab
+status: stable
+description: Detects PowerShell execution with encoded commands commonly used to bypass security controls
+author: soc-analyst-01
+date: 2024/01/15
+
+logsource:
+  product: windows
+  category: process_creation
+
+detection:
+  selection:
+    CommandLine|contains:
+      - '-EncodedCommand'
+      - '-enc '
+      - '-ec '
+  condition: selection
+
+falsepositives:
+  - Legitimate administrative scripts
+
+level: high
+
+tags:
+  - attack.execution
+  - attack.t1059.001
