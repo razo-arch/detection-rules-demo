@@ -1,4 +1,4 @@
-﻿name: Deploy Detection Rules
+name: Deploy Detection Rules
 
 on:
   push:
@@ -15,13 +15,20 @@ jobs:
       name: production-wazuh
     steps:
       - uses: actions/checkout@v4
+
       - name: Install xmllint
         run: sudo apt-get install -y libxml2-utils
+
       - name: Deploy rules to Wazuh
         env:
-          WAZUH_HOST:    ${{ secrets.WAZUH_HOST }}
-          WAZUH_USER:    ${{ secrets.WAZUH_SSH_USER }}
+          WAZUH_HOST: ${{ secrets.WAZUH_HOST }}
+          WAZUH_USER: ${{ secrets.WAZUH_SSH_USER }}
           WAZUH_SSH_KEY: ${{ secrets.WAZUH_SSH_KEY_B64 }}
         run: |
-          chmod +x scripts/deploy_wazuh_rules.sh
-          bash scripts/deploy_wazuh_rules.sh
+          echo "$WAZUH_SSH_KEY" | base64 -d > /tmp/wazuh_key
+          chmod 600 /tmp/wazuh_key
+          SSH_OPTS="-o StrictHostKeyChecking=no -i /tmp/wazuh_key"
+          for f in wazuh/rules/*.xml; do xmllint --noout "$f"; done
+          scp $SSH_OPTS wazuh/rules/*.xml $WAZUH_USER@$WAZUH_HOST:/var/ossec/etc/rules/
+          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST 'sudo /var/ossec/bin/wazuh-control reload'
+          echo "Deployment complete."
