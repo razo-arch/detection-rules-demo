@@ -8,9 +8,32 @@ on:
       - "wazuh/**"
 
 jobs:
+  deploy-elk:
+    name: Deploy to ELK
+    runs-on: ubuntu-latest
+    environment:
+      name: production-wazuh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests urllib3
+
+      - name: Deploy rules to ELK
+        env:
+          KIBANA_URL: ${{ secrets.KIBANA_URL }}
+          ELASTIC_API_KEY: ${{ secrets.ELASTIC_API_KEY }}
+        run: |
+          python3 scripts/deploy_elk_rules.py
+
   deploy-wazuh:
     name: Deploy to Wazuh
     runs-on: ubuntu-latest
+    needs: deploy-elk
     environment:
       name: production-wazuh
     steps:
@@ -30,5 +53,5 @@ jobs:
           SSH_OPTS="-o StrictHostKeyChecking=no -i /tmp/wazuh_key"
           for f in wazuh/rules/*.xml; do xmllint --noout "$f"; done
           scp $SSH_OPTS wazuh/rules/*.xml $WAZUH_USER@$WAZUH_HOST:/tmp/
-          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST "sudo cp /tmp/100001-custom-endpoint.xml /var/ossec/etc/rules/ && sudo /var/ossec/bin/wazuh-control reload && echo Done"
+          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST "sudo cp /tmp/100001-custom-endpoint.xml /var/ossec/etc/rules/ && sudo /var/ossec/bin/wazuh-control reload"
           echo "Deployment complete."
