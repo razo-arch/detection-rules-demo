@@ -1,4 +1,4 @@
-﻿<group name="custom,endpoint,execution">
+<group name="custom,endpoint,execution">
 
   <rule id="100001" level="10">
     <if_group>syscheck</if_group>
