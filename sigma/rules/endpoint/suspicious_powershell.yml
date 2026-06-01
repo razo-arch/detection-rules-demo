@@ -25,3 +25,4 @@ level: high
 tags:
   - attack.execution
   - attack.t1059.001
+# pipeline-trigger: v2
