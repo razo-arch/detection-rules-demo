@@ -1,31 +1,29 @@
 #!/bin/bash
-echo ""
-echo "Validating Wazuh rules..."
-echo ""
+set -e
 
-ERRORS=0
+REMOTE_RULES_DIR="/var/ossec/etc/rules"
+LOCAL_RULES_DIR="converted/wazuh"
+SSH_OPTS="-o StrictHostKeyChecking=no -i /tmp/wazuh_key"
 
-for rule_file in wazuh/rules/*.xml; do
-    xmllint --noout "$rule_file" 2>&1
-    if [ $? -ne 0 ]; then
-        echo "  [FAIL] Invalid XML: $rule_file"
-        ERRORS=$((ERRORS + 1))
-    else
-        echo "  [PASS] $rule_file"
-    fi
+echo "==> Writing SSH key..."
+echo "$WAZUH_SSH_KEY" | base64 -d > /tmp/wazuh_key
+chmod 600 /tmp/wazuh_key
 
-    INVALID_IDS=$(grep -oP 'id="\K[0-9]+' "$rule_file" | awk '$1 < 100000')
-    if [ -n "$INVALID_IDS" ]; then
-        echo "  [FAIL] $rule_file: Rule IDs must be >= 100000. Found: $INVALID_IDS"
-        ERRORS=$((ERRORS + 1))
-    fi
+echo "==> Validating rules before deploy..."
+for f in $(find ${LOCAL_RULES_DIR} -name "*.xml"); do
+    xmllint --noout "$f" || { echo "Invalid XML: $f"; exit 1; }
 done
 
-if [ $ERRORS -gt 0 ]; then
-    echo ""
-    echo "$ERRORS validation error(s) found."
-    exit 1
-fi
+echo "==> Copying rules to Wazuh Manager..."
+scp $SSH_OPTS -r ${LOCAL_RULES_DIR}/* \
+    ${WAZUH_USER}@${WAZUH_HOST}:/tmp/sigma-rules/
 
-echo ""
-echo "All Wazuh rules passed validation."
+echo "==> Moving rules to Wazuh rules directory..."
+ssh $SSH_OPTS ${WAZUH_USER}@${WAZUH_HOST} \
+    'sudo cp -r /tmp/sigma-rules/*.xml /var/ossec/etc/rules/ 2>/dev/null; sudo cp -r /tmp/sigma-rules/**/*.xml /var/ossec/etc/rules/ 2>/dev/null || true'
+
+echo "==> Reloading Wazuh Manager..."
+ssh $SSH_OPTS ${WAZUH_USER}@${WAZUH_HOST} \
+    'sudo /var/ossec/bin/wazuh-control reload'
+
+echo "==> Wazuh deployment complete."

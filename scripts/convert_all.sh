@@ -8,13 +8,7 @@ echo ""
 echo "==> Installing Sigma backends..."
 pip install -q sigma-cli \
   pySigma-backend-elasticsearch \
-  pySigma-backend-kusto \
   pyyaml
-
-echo ""
-echo "==> Installing Sigma plugins..."
-sigma plugin install elasticsearch 2>/dev/null || true
-sigma plugin install kusto 2>/dev/null || true
 
 mkdir -p ${OUT_DIR}/elk
 mkdir -p ${OUT_DIR}/wazuh
@@ -56,9 +50,9 @@ for rule in $(find ${SIGMA_DIR} -name "*.yml"); do
     "$rule" "${OUT_DIR}/elastalert2/${SUBDIR}/${BASENAME}.yml" \
     && echo "    [PASS] ElastAlert2" || echo "    [WARN] ElastAlert2 skipped"
 
-  # Microsoft Sentinel KQL (via kusto backend - no pipeline needed)
-  sigma convert -t kusto \
-    "$rule" -o "${OUT_DIR}/sentinel/${SUBDIR}/${BASENAME}.kql" 2>/dev/null \
+  # Microsoft Sentinel KQL (custom converter)
+  python3 scripts/sigma_to_sentinel.py \
+    "$rule" "${OUT_DIR}/sentinel/${SUBDIR}/${BASENAME}.kql" \
     && echo "    [PASS] Sentinel KQL" || echo "    [WARN] Sentinel KQL skipped"
 
   RULE_COUNT=$((RULE_COUNT + 1))
