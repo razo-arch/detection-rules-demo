@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 set -e
 
 SIGMA_DIR="sigma/rules"
@@ -10,6 +10,11 @@ pip install -q sigma-cli \
   pySigma-backend-elasticsearch \
   pySigma-backend-kusto \
   pyyaml
+
+echo ""
+echo "==> Installing Sigma plugins..."
+sigma plugin install elasticsearch 2>/dev/null || true
+sigma plugin install kusto 2>/dev/null || true
 
 mkdir -p ${OUT_DIR}/elk
 mkdir -p ${OUT_DIR}/wazuh
