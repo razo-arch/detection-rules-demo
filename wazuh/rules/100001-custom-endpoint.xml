@@ -1,3 +1,4 @@
+<!-- deploy trigger -->
 <group name="custom,endpoint,execution">
 
   <rule id="100001" level="10">
