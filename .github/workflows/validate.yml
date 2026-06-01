@@ -4,20 +4,44 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "elk/**"
-      - "wazuh/**"
-      - "scripts/**"
+      - "sigma/**"
 
 jobs:
+  validate-sigma:
+    name: Validate Sigma Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install sigma-cli
+        run: pip install sigma-cli pySigma-backend-elasticsearch
+
+      - name: Validate Sigma rule syntax
+        run: |
+          for rule in $(find sigma/rules -name "*.yml"); do
+            sigma check "$rule" && echo "  [PASS] $rule" || exit 1
+          done
+
   validate-elk:
     name: Validate ELK Rules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Run ELK validation
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run ELK rule validation
         run: python scripts/validate_elk_rules.py
 
   validate-wazuh:
@@ -25,9 +49,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install xmllint
         run: sudo apt-get install -y libxml2-utils
-      - name: Run Wazuh validation
+
+      - name: Run Wazuh rule validation
         run: |
           chmod +x scripts/validate_wazuh_rules.sh
           bash scripts/validate_wazuh_rules.sh

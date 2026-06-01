@@ -1,57 +1,143 @@
-name: Deploy Detection Rules
+name: Convert and Deploy Detection Rules
 
 on:
   push:
     branches: [main]
     paths:
-      - "elk/**"
-      - "wazuh/**"
+      - "sigma/**"
 
 jobs:
-  deploy-elk:
-    name: Deploy to ELK
+  convert:
+    name: Convert Sigma Rules
     runs-on: ubuntu-latest
-    environment:
-      name: production-wazuh
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Convert all Sigma rules
+        run: |
+          chmod +x scripts/convert_all.sh
+          bash scripts/convert_all.sh
+
+      - name: Commit converted rules back to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add converted/
+          git diff --staged --quiet || git commit -m "chore: auto-convert sigma rules [skip ci]"
+          git push
+
+      - name: Upload converted rules as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: converted-rules
+          path: converted/
+
+  deploy-elk:
+    name: Deploy to ELK
+    needs: convert
+    runs-on: ubuntu-latest
+    environment:
+      name: production-elk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: converted-rules
+          path: converted/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
         run: pip install requests urllib3
 
-      - name: Deploy rules to ELK
+      - name: Deploy ELK rules
         env:
-          KIBANA_URL: ${{ secrets.KIBANA_URL }}
-          ELASTIC_API_KEY: ${{ secrets.ELASTIC_API_KEY }}
-        run: |
-          python3 scripts/deploy_elk_rules.py
+          KIBANA_URL:       ${{ secrets.KIBANA_URL }}
+          ELASTIC_API_KEY:  ${{ secrets.ELASTIC_API_KEY }}
+        run: python scripts/deploy_elk_rules.py
 
   deploy-wazuh:
     name: Deploy to Wazuh
-    runs-on: ubuntu-latest
     needs: deploy-elk
+    runs-on: ubuntu-latest
     environment:
       name: production-wazuh
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: converted-rules
+          path: converted/
+
       - name: Install xmllint
         run: sudo apt-get install -y libxml2-utils
 
-      - name: Deploy rules to Wazuh
+      - name: Deploy Wazuh rules
         env:
-          WAZUH_HOST: ${{ secrets.WAZUH_HOST }}
-          WAZUH_USER: ${{ secrets.WAZUH_SSH_USER }}
+          WAZUH_HOST:    ${{ secrets.WAZUH_HOST }}
+          WAZUH_USER:    ${{ secrets.WAZUH_SSH_USER }}
           WAZUH_SSH_KEY: ${{ secrets.WAZUH_SSH_KEY_B64 }}
-        run: |
-          echo "$WAZUH_SSH_KEY" | base64 -d > /tmp/wazuh_key
-          chmod 600 /tmp/wazuh_key
-          SSH_OPTS="-o StrictHostKeyChecking=no -i /tmp/wazuh_key"
-          for f in wazuh/rules/*.xml; do xmllint --noout "$f"; done
-          scp $SSH_OPTS wazuh/rules/*.xml $WAZUH_USER@$WAZUH_HOST:/tmp/
-          ssh $SSH_OPTS $WAZUH_USER@$WAZUH_HOST "sudo cp /tmp/100001-custom-endpoint.xml /var/ossec/etc/rules/ && sudo /var/ossec/bin/wazuh-control reload"
-          echo "Deployment complete."
+        run: bash scripts/deploy_wazuh_rules.sh
+
+  deploy-elastalert2:
+    name: Deploy to ElastAlert2
+    needs: deploy-elk
+    runs-on: ubuntu-latest
+    environment:
+      name: production-elastalert2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: converted-rules
+          path: converted/
+
+      - name: Deploy ElastAlert2 rules
+        env:
+          EA2_HOST:    ${{ secrets.EA2_HOST }}
+          EA2_USER:    ${{ secrets.EA2_SSH_USER }}
+          EA2_SSH_KEY: ${{ secrets.EA2_SSH_KEY_B64 }}
+        run: bash scripts/deploy_elastalert2.sh
+
+  deploy-sentinel:
+    name: Deploy to Microsoft Sentinel
+    needs: convert
+    runs-on: ubuntu-latest
+    environment:
+      name: production-sentinel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: converted-rules
+          path: converted/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Deploy Sentinel rules
+        env:
+          AZURE_TENANT_ID:         ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID:         ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET:     ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_ID:   ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP:    ${{ secrets.AZURE_RESOURCE_GROUP }}
+          SENTINEL_WORKSPACE_NAME: ${{ secrets.SENTINEL_WORKSPACE_NAME }}
+        run: python scripts/deploy_sentinel.py
