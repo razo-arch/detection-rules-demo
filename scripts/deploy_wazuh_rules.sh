@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 set -e
 
 REMOTE_RULES_DIR="/var/ossec/etc/rules"

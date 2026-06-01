@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 echo ""
 echo "Validating Wazuh rules..."
 echo ""
