@@ -1,4 +1,4 @@
-﻿{
+{
   "rule_id": "custom-002",
   "name": "Potential DNS Tunneling - High Query Volume",
   "description": "Detects unusually high DNS query volume from a single host, indicative of DNS tunneling for C2 communication.",

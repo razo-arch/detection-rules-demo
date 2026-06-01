@@ -1,4 +1,4 @@
-﻿{
+{
   "rule_id": "custom-001",
   "name": "Suspicious PowerShell Encoded Command",
   "description": "Detects PowerShell execution with encoded commands, commonly used to bypass detection.",
