@@ -1,1 +1,5 @@
-CommandLine contains "-EncodedCommand" or CommandLine contains "-enc " or CommandLine contains "-ec "
+DeviceProcessEvents
+| where (ProcessCommandLine has "-EncodedCommand" or ProcessCommandLine has "-enc " or ProcessCommandLine has "-ec ")
+| project TimeGenerated, DeviceName, FolderPath, ProcessCommandLine,
+          InitiatingProcessFolderPath, AccountName
+| order by TimeGenerated desc
