@@ -1,0 +1,10 @@
+<group name="sigma,custom,">
+  <rule id="106419" level="12">
+    <description>Sigma: Suspicious PowerShell Encoded Command</description>
+    <field name="CommandLine" type="pcre2">-EncodedCommand</field>
+    <field name="CommandLine" type="pcre2">-enc </field>
+    <field name="CommandLine" type="pcre2">-ec </field>
+    <info type="text">Detects PowerShell execution with encoded commands commonly used to bypass security controls</info>
+    <mitre><id>T1059.001</id></mitre>
+  </rule>
+</group>

@@ -1,0 +1,26 @@
+# AUTO-GENERATED from Sigma rule - DO NOT EDIT
+# Source: sigma/rules/endpoint/suspicious_powershell.yml
+
+name: "Suspicious PowerShell Encoded Command"
+type: any
+index: wazuh-alerts-4.x-*
+
+filter:
+  - bool:
+      should:
+      - query_string:
+          query: "CommandLine: *-EncodedCommand*"
+      - query_string:
+          query: "CommandLine: *-enc *"
+      - query_string:
+          query: "CommandLine: *-ec *"
+
+alert:
+  - debug
+
+priority: 4
+
+realert:
+  minutes: 30
+
+description: "Detects PowerShell execution with encoded commands commonly used to bypass security controls"
