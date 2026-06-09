@@ -1,0 +1,3 @@
+{"CommandLine": "powershell.exe -EncodedCommand SQBFAFgA", "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"}
+{"CommandLine": "powershell -enc dABlAHMAdAA=", "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"}
+{"CommandLine": "pwsh.exe -ec aQBlAHgA", "Image": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"}
