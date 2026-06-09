@@ -7,6 +7,7 @@ on:
       - "sigma/**"
       - "scripts/**"
       - "tests/**"
+      - "runner/**"
   workflow_dispatch:
 
 jobs:
@@ -16,17 +17,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml pytest
+
       - name: Run detection logic tests
-        run: python _detection-testing/runner/sigma_test.py --rules sigma/rules --tests tests/sigma
-	
+        run: python runner/sigma_test.py --rules sigma/rules --tests tests/sigma
+
   convert:
     name: Convert Sigma Rules
     needs: detection-tests
