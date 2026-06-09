@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,7 +26,7 @@ jobs:
         run: pip install pyyaml pytest
 
       - name: Run detection logic tests (does each rule actually detect?)
-        run: python runner/sigma_test.py --rules sigma/rules --tests tests/sigma
+        run: python _detection-testing/runner/sigma_test.py --rules sigma/rules --tests tests/sigma
 
       - name: Run detection tests (pytest, per-case)
         run: pytest -v

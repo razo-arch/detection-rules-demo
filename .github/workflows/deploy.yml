@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,7 +29,7 @@ jobs:
         run: pip install pyyaml pytest
 
       - name: Run detection logic tests
-        run: python runner/sigma_test.py --rules sigma/rules --tests tests/sigma
+        run: python _detection-testing/runner/sigma_test.py --rules sigma/rules --tests tests/sigma
 
   convert:
     name: Convert Sigma Rules
